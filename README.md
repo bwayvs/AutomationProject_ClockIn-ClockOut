@@ -22,6 +22,7 @@ This feature checks for an existing 'DATE' column in the "Raw Data" sheet and de
 ```javascript
 function sortRawData() { ... }
 ```
+![Data Grouping Screenshot](https://github.com/YourUsername/GoogleSheets_DataTransformation/blob/main/images/data_grouping.png)
 
 ### Data Grouping and Error Highlighting
 Groups data based on certain criteria and highlights errors (like missing usernames, invalid dates, and absent study fields).
