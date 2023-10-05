@@ -1,0 +1,330 @@
+function executeAllFunctions() {
+  sortRawData();  
+  SortGroup();
+  transformData();
+  preparePrepData();
+  createMonthlySheets();
+}
+
+function sortRawData() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var rawDataSheet = ss.getSheetByName("Raw Data");
+  var rawDataRange = rawDataSheet.getDataRange();
+  var rawData = rawDataRange.getValues();
+ 
+  // Check if DATE column exists, if so, delete it
+  var headers = rawData[0];
+  var dateColumnIndex = headers.indexOf('DATE');
+  if (dateColumnIndex !== -1) {
+    rawDataSheet.deleteColumn(dateColumnIndex + 1);  // Delete the DATE column
+  }
+
+
+  // Add a new DATE column at the end
+  for (var i = 0; i < rawData.length; i++) {
+    var row = rawData[i];
+    if (i === 0) {
+      row.push('DATE');
+    } else {
+      var interviewEnd = new Date(row[3]);
+      var dateOnly = Utilities.formatDate(interviewEnd, "GMT", "MM/dd/yyyy");
+      row.push(dateOnly);
+    }
+  }
+ 
+  // Update the sheet with the new DATE column
+  rawDataSheet.getRange(1, 1, rawData.length, rawData[0].length).setValues(rawData);
+
+
+  // Sort the data
+  var sortRange = rawDataSheet.getRange(2, 1, rawData.length - 1, rawData[0].length);
+  sortRange.sort([{column: rawData[0].length, ascending: true}, {column: 9, ascending: true}, {column: 8, ascending: true}]);
+ 
+  // Delete the DATE column after sorting
+  rawDataSheet.deleteColumn(rawData[0].length);  // Delete the last column, which is DATE
+}
+
+
+
+
+
+
+function SortGroup() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var rawDataSheet = ss.getSheetByName("Raw Data");
+
+
+  var rawDataRange = rawDataSheet.getDataRange();
+  var numRows = rawDataRange.getNumRows();
+  var rawData = rawDataRange.getValues();
+
+
+  var sortedData = [];
+
+
+  // Sort data and capture errors
+  for (var i = 1; i < numRows; i++) {  // Start from 1 to skip the header row
+    var row = rawData[i];
+    var username = row[7];
+    var date = row[2] ? new Date(row[2]).toLocaleDateString() : null;
+    var study = row[8];
+
+
+    // Adjust the logic to interpret "1" as "Starting" and "2" as "Ending"
+    var startEnd = row[9];
+    if (startEnd === 1) {
+      row[9] = "Starting";
+    } else if (startEnd === 2) {
+      row[9] = "Ending";
+    }
+
+
+    // Check each field individually
+    if (username == "") {
+      rawDataSheet.getRange(i+1, 8+1).setBackground('yellow'); // Highlight username field
+    }
+
+
+    if (date == "Invalid Date" || date == null) {
+      rawDataSheet.getRange(i+1, 3+1).setBackground('yellow'); // Highlight date field
+    }
+
+
+    if (study == "") {
+      rawDataSheet.getRange(i+1, 9+1).setBackground('yellow'); // Highlight study field
+    }
+
+
+    sortedData.push(row);
+  }
+
+
+  sortedData.sort(function(row1, row2) {
+    var date1 = new Date(row1[2]).getDate();
+    var date2 = new Date(row2[2]).getDate();
+    if (date1 > date2) return 1;
+    if (date1 < date2) return -1;
+    if (row1[7] > row2[7]) return 1;
+    if (row1[7] < row2[7]) return -1;
+    if (row1[8] > row2[8]) return 1;
+    if (row1[8] < row2[8]) return -1;
+    return 0;
+  });
+
+
+  var prevUsername = "";
+  var prevDate = "";
+  var prevStudy = "";
+  var newData = [];
+
+
+  for (var i = 0; i < sortedData.length; i++) {
+    var row = sortedData[i];
+    var username = row[7];
+    var date = new Date(row[2]).toLocaleDateString();
+    var study = row[8];
+
+
+    if (username == prevUsername && date == prevDate && study == prevStudy) {
+      newData.push(row);
+    } else {
+      if (i != 0) {
+        newData.push(Array(rawDataRange.getNumColumns()).fill(""));
+      }
+      newData.push(row);
+      prevUsername = username;
+      prevDate = date;
+      prevStudy = study;
+    }
+  }
+
+
+  var newSheet = ss.insertSheet("Sorted Data");
+  var newRange = newSheet.getRange(1, 1, newData.length, rawDataRange.getNumColumns());
+  newRange.setValues(newData);
+}
+
+
+function transformData() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sortedDataSheet = ss.getSheetByName("Sorted Data");
+  var sortedDataRange = sortedDataSheet.getDataRange();
+  var numRows = sortedDataRange.getNumRows();
+  var sortedData = sortedDataRange.getValues();
+  var newData = [];
+  var prevCapiUsername = "";
+  var prevDate = "";
+  var prevStudy = "";
+  var firstEndTime = null;
+  var lastEndTime = null;
+
+
+  var numCols = sortedData[0].length; // Dynamically get the number of columns from the original data
+
+
+  for (var i = 0; i < numRows; i++) {
+    var row = sortedData[i];
+    var capiUsername = row[7];
+    var date = new Date(row[2]).toLocaleDateString();
+    var study = row[8];
+
+
+    if (capiUsername && date && study) {
+      var endTime = new Date(row[3]);
+
+
+      if (capiUsername === prevCapiUsername && date === prevDate && study === prevStudy) {
+        lastEndTime = endTime;
+        newData.push(row);
+      } else {
+        if (newData.length > 0 && firstEndTime !== null && lastEndTime !== null) {
+          var groupTotalTime = (lastEndTime - firstEndTime) / (1000 * 60 * 60);
+          var totalTimeRow = Array(numCols).fill("");
+          totalTimeRow[0] = "Total Time";
+          totalTimeRow[1] = groupTotalTime;
+          newData.push(totalTimeRow);
+        }
+
+
+        if (i !== 0) {
+          newData.push(Array(numCols).fill(""));
+        }
+
+
+        newData.push(row);
+        prevCapiUsername = capiUsername;
+        prevDate = date;
+        prevStudy = study;
+        firstEndTime = endTime;
+        lastEndTime = endTime;
+      }
+    }
+  }
+
+
+  // Clear the "Sorted Data" sheet and set the transformed data
+  sortedDataSheet.clearContents();
+  var transformedDataRange = sortedDataSheet.getRange(1, 1, newData.length, numCols);
+  transformedDataRange.setValues(newData);
+}
+
+
+
+
+
+
+function preparePrepData() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const rawDataSheet = ss.getSheetByName('Raw Data');
+  const sortedDataSheet = ss.getSheetByName('Sorted Data');
+
+
+  let prepDataSheet = ss.getSheetByName('Prep Data');
+ 
+  // If 'Prep Data' sheet does not exist, create a new one
+  if (prepDataSheet === null) {
+    prepDataSheet = ss.insertSheet('Prep Data');
+  }
+ 
+  // Define headers
+  const headers = ['capiUsername', 'Study', 'Last Name', 'First Name', 'Interviewer ID', 'English Hours', 'Date', 'Check-In ID', 'Check-Out ID', 'Start Time', 'End Time', 'Total Hours'];
+ 
+  // Set headers in the 'Prep Data' sheet
+  prepDataSheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+
+
+  const rawValues = rawDataSheet.getDataRange().getValues();
+  const sortedValues = sortedDataSheet.getDataRange().getValues();
+
+
+  let prepData = [];
+  let checkInId, checkOutId;  // Declare checkInId and checkOutId at the function scope
+
+
+  for (let i = 0; i < sortedValues.length; i++) {
+    const row = sortedValues[i];
+    if (row[0] === 'Total Time' && i >= 2) {
+      const totalHours = row[1];
+      const endRow = sortedValues[i-1];
+      const startRow = sortedValues[i-2];
+     
+      // Use column index 6 to get capiUsername from Raw Data
+      const capiUsername = startRow[6];  
+      let lastName = "";
+      let firstName = "";
+
+
+      // Use column index 7 to get username from Raw Data
+      const username = startRow[7];
+     
+      // Extract first name and last name from the 'username' column in the Raw Data sheet
+      if (typeof username === 'string' && username.includes('-')) {
+        const [id, name] = username.split('-');
+        [firstName, lastName] = name.trim().split(' ');
+      }
+
+
+      const date = Utilities.formatDate(new Date(startRow[2]), 'GMT', 'MM/dd/yyyy');
+      checkInId = startRow[0];  // Initialize checkInId here
+      checkOutId = endRow[1];  // Initialize checkOutId here
+     
+      const startTime = Utilities.formatDate(new Date(startRow[3] - 7 * 60 * 60 * 1000), 'GMT', 'HH:mm');
+      const endTime = Utilities.formatDate(new Date(endRow[3] - 7 * 60 * 60 * 1000), 'GMT', 'HH:mm');
+     
+      const study = startRow[8];
+      const interviewerId = startRow[5];
+
+
+      prepData.push([capiUsername, study, lastName, firstName, interviewerId, totalHours, date, checkInId, checkOutId, startTime, endTime, totalHours]);
+    }
+  }
+
+
+  // Write data to 'Prep Data' sheet
+  prepDataSheet.getRange(2, 1, prepData.length, prepData[0].length).setValues(prepData);
+}
+
+
+function createMonthlySheets() {
+  let ss = SpreadsheetApp.getActiveSpreadsheet();
+  let prepDataSheet = ss.getSheetByName('Prep Data');
+  let values = prepDataSheet.getDataRange().getValues();
+ 
+  // Extract headers
+  let headers = values.shift();
+ 
+  // Group rows by Study only, which is now in the second column
+  let groups = {};
+  for(let row of values) {
+    let study = row[1]; // The study value is now in the second column
+    if(!groups[study]) {
+      groups[study] = [];
+    }
+   
+    groups[study].push(row);
+  }
+ 
+  // Create a new sheet for each group
+  for(let groupName in groups) {
+    if (!groupName) continue;  // Skip creating a sheet for empty study names
+   
+    let group = groups[groupName];
+   
+    let sheet = ss.insertSheet(groupName);
+    sheet.appendRow(headers);
+   
+    // Add data rows to the sheet
+    for(let row of group) {
+      sheet.appendRow(row);
+    }
+   
+    // Create title
+    sheet.insertRowBefore(1);
+    sheet.getRange(1, 1, 1, headers.length).merge();
+    sheet.getRange(1, 1).setValue(groupName).setHorizontalAlignment('center');
+  }
+}
+
+
+
+
