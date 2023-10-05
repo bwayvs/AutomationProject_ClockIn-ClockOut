@@ -40,14 +40,13 @@ Processes the sorted data to provide total time computations for each group.
 function transformData() { ... }
 ```
 
-![Data Transformation Screenshot](https://github.com/bwayvs/AutomationProject_ClockIn-ClockOut/blob/main/images/Prepped%20Data.png)
-
 ### Data Preparation for Analysis
 Creates a 'Prep Data' sheet with refined information, including total hours, check-in ID, and check-out ID.
 
 ```javascript
 function preparePrepData() { ... }
 ```
+![Data Transformation Screenshot](https://github.com/bwayvs/AutomationProject_ClockIn-ClockOut/blob/main/images/Prepped%20Data.png)
 
 ### Creation of Monthly Data Sheets
 Based on the 'Study' column in the 'Prep Data' sheet, separate monthly sheets are generated.
