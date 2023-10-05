@@ -1,6 +1,6 @@
 # Google Sheets Data Transformation Automation
 
-This project focuses on automating specific data transformation processes within Google Sheets. Utilizing Google Apps Script, the project enhances the sorting, transformation, and preparation of data for more effective analysis and visualization.
+This project focuses on automating specific data transformation processes within Google Sheets. Utilizing Google Apps Script, the project enhances the sorting, transformation, and preparation of data for more effective analysis and visualization. This project saved this small consulting firm 20+ hours each month by automating a repetative and complicated task, reducing possibility of human error. 
 
 ## Sources
 
