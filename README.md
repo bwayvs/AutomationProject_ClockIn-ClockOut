@@ -22,7 +22,7 @@ This feature checks for an existing 'DATE' column in the "Raw Data" sheet and de
 ```javascript
 function sortRawData() { ... }
 ```
-![Data Grouping Screenshot](https://github.com/YourUsername/GoogleSheets_DataTransformation/blob/main/images/data_grouping.png)
+![Data Grouping Screenshot](https://github.com/bwayvs/AutomationProject_ClockIn-ClockOut/blob/main/images/Raw%20Data.png)
 
 ### Data Grouping and Error Highlighting
 Groups data based on certain criteria and highlights errors (like missing usernames, invalid dates, and absent study fields).
@@ -31,7 +31,7 @@ Groups data based on certain criteria and highlights errors (like missing userna
 function SortGroup() { ... }
 ```
 
-![Data Grouping Screenshot](https://github.com/YourUsername/GoogleSheets_DataTransformation/blob/main/images/data_grouping.png)
+![Data Grouping Screenshot](https://github.com/bwayvs/AutomationProject_ClockIn-ClockOut/blob/main/images/Sorted%20Data.png)
 
 ### Data Transformation
 Processes the sorted data to provide total time computations for each group.
@@ -40,7 +40,7 @@ Processes the sorted data to provide total time computations for each group.
 function transformData() { ... }
 ```
 
-![Data Transformation Screenshot](https://github.com/YourUsername/GoogleSheets_DataTransformation/blob/main/images/data_transformation.png)
+![Data Transformation Screenshot](https://github.com/bwayvs/AutomationProject_ClockIn-ClockOut/blob/main/images/Prepped%20Data.png)
 
 ### Data Preparation for Analysis
 Creates a 'Prep Data' sheet with refined information, including total hours, check-in ID, and check-out ID.
@@ -49,8 +49,6 @@ Creates a 'Prep Data' sheet with refined information, including total hours, che
 function preparePrepData() { ... }
 ```
 
-![Data Preparation Screenshot](https://github.com/YourUsername/GoogleSheets_DataTransformation/blob/main/images/data_preparation.png)
-
 ### Creation of Monthly Data Sheets
 Based on the 'Study' column in the 'Prep Data' sheet, separate monthly sheets are generated.
 
@@ -58,15 +56,7 @@ Based on the 'Study' column in the 'Prep Data' sheet, separate monthly sheets ar
 function createMonthlySheets() { ... }
 ```
 
-![Monthly Sheets Screenshot](https://github.com/YourUsername/GoogleSheets_DataTransformation/blob/main/images/monthly_sheets.png)
-
-## How to Use
-
-1. Open your Google Sheets document.
-2. Click on "Extensions" and then "Apps Script."
-3. Paste the provided script in the script editor.
-4. Save and then reload your Google Sheet.
-5. You'll find a new menu item titled "BIG RED BUTTON" with an option "CLICK HERE TO EXECUTE". Clicking on this option will execute all the automation functions.
+![Monthly Sheets Screenshot](https://github.com/bwayvs/AutomationProject_ClockIn-ClockOut/blob/main/images/Study%20Data.png)
 
 ## Future Plans
 
